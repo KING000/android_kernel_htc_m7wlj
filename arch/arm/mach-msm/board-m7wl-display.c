@@ -60,8 +60,8 @@
 #define MSM_FB_OVERLAY1_WRITEBACK_SIZE (0)
 #endif  
 
-static void m7_display_on(struct msm_fb_data_type *mfd);
-static void m7_display_off(struct msm_fb_data_type *mfd);
+static void m7wl_display_on(struct msm_fb_data_type *mfd);
+static void m7wl_display_off(struct msm_fb_data_type *mfd);
 
 static struct resource msm_fb_resources[] = {
 	{
@@ -789,9 +789,9 @@ static int set_cabc_Video_cmds_count = 0;
 static unsigned int pwm_min = 6;
 static unsigned int pwm_default = 81 ;
 static unsigned int pwm_max = 255;
-// static atomic_t lcd_backlight_off;
+static atomic_t lcd_backlight_off;
 
-// #define CABC_DIMMING_SWITCH
+#define CABC_DIMMING_SWITCH
 
 static char enter_sleep[2] = {0x10, 0x00}; 
 static char exit_sleep[2] = {0x11, 0x00}; 

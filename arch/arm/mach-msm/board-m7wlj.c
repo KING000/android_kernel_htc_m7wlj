@@ -1995,13 +1995,6 @@ void m7wl_add_usb_devices(void)
 {
 	printk(KERN_INFO "%s rev: %d\n", __func__, system_rev);
 
-	if (system_rev >= PVT) {
-		rc = pm8xxx_gpio_config(otg_pmic_gpio_pvt[0].gpio,
-				&otg_pmic_gpio_pvt[0].config);
-		if (rc)
-			pr_info("[USB_BOARD] %s: Config ERROR: GPIO=%u, rc=%d\n",
-					__func__, otg_pmic_gpio_pvt[0].gpio, rc);
-	}
 
 #if 0
 	android_usb_pdata.products[0].product_id =
