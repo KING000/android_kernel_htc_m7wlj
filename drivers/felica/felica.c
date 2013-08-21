@@ -1116,11 +1116,7 @@ static int felica_pon_close(struct inode *inode, struct file *file)
 {
 	FELICA_LOG_DEBUG("[MFDD] %s START", __func__);
 
-#if defined(CONFIG_ARCH_EXYNOS)
 	gpio_set_value(GPIO_PINID_FELICA_PON, GPIO_VALUE_LOW);
-#elif defined(CONFIG_ARCH_APQ8064)
-	ice_gpiox_set(GPIO_PINID_FELICA_PON, GPIO_VALUE_LOW);
-#endif
 
 	FELICA_LOG_DEBUG("[MFDD] %s END", __func__);
 	return 0;
@@ -1136,13 +1132,8 @@ static ssize_t felica_pon_read(struct file *file, char __user *buf, size_t len,
 	char retparam;
 	FELICA_LOG_DEBUG("[MFDD] %s START", __func__);
 
-#if defined(CONFIG_ARCH_EXYNOS)
 	ret = gpio_get_value(GPIO_PINID_FELICA_PON);
-#elif defined(CONFIG_ARCH_APQ8064)
-	ret = ice_gpiox_get(GPIO_PINID_FELICA_PON);
-#else
-	ret = gpio_get_value(GPIO_PINID_FELICA_PON);
-#endif
+
 	if (ret == GPIO_VALUE_HIGH) {
 		retparam = FELICA_PON_WIRED;
 		FELICA_LOG_DEBUG("Wired interface Status is [%d][start]",
@@ -1201,11 +1192,7 @@ static ssize_t felica_pon_write(struct file *file, const char __user *data,
 		return -EINVAL;
 	}
 
-#if defined(CONFIG_ARCH_EXYNOS)
 	gpio_set_value(GPIO_PINID_FELICA_PON, setparam);
-#elif defined(CONFIG_ARCH_APQ8064)
-	ice_gpiox_set(GPIO_PINID_FELICA_PON, setparam);
-#endif
 
 	FELICA_LOG_DEBUG("[MFDD] %s END", __func__);
 	return FELICA_PON_DATA_LEN;
@@ -2421,11 +2408,7 @@ static void felica_initialize_pin(void)
 {
 	FELICA_LOG_DEBUG("[MFDD] %s START", __func__);
 
-#if defined(CONFIG_ARCH_EXYNOS)
 	gpio_set_value(GPIO_PINID_FELICA_PON, GPIO_VALUE_LOW);
-#elif defined(CONFIG_ARCH_APQ8064)
-	ice_gpiox_set(GPIO_PINID_FELICA_PON, GPIO_VALUE_LOW);
-#endif
 
 	FELICA_LOG_DEBUG("[MFDD] %s END", __func__);
 }
@@ -2437,11 +2420,7 @@ static void felica_finalize_pin(void)
 {
 	FELICA_LOG_DEBUG("[MFDD] %s START", __func__);
 
-#if defined(CONFIG_ARCH_EXYNOS)
 	gpio_set_value(GPIO_PINID_FELICA_PON, GPIO_VALUE_LOW);
-#elif defined(CONFIG_ARCH_APQ8064)
-	ice_gpiox_set(GPIO_PINID_FELICA_PON, GPIO_VALUE_LOW);
-#endif
 
 	FELICA_LOG_DEBUG("[MFDD] %s END", __func__);
 }
@@ -2675,11 +2654,8 @@ static ssize_t hsel_read(struct file *file, char __user * buf, size_t len,
 		return -EIO;
 	}
 
-#if defined(CONFIG_ARCH_EXYNOS)
 	ret = gpio_get_value( GPIO_PINID_NFC_HSEL );
-#elif defined(CONFIG_ARCH_APQ8064)
-	ret = ice_gpiox_get( GPIO_PINID_NFC_HSEL );
-#endif
+
 	if ( 0 > ret ) {
 		FELICA_LOG_ERR("[MFDD] %s ERROR(gpio_get_value), ret=[%d]",
 					__func__, ret);
@@ -2733,11 +2709,7 @@ static ssize_t hsel_write(struct file *file, const char __user *data,\
 		return -EIO;
 	}
 
-#if defined(CONFIG_ARCH_EXYNOS)
 	gpio_set_value(GPIO_PINID_NFC_HSEL , hsel_val );
-#elif defined(CONFIG_ARCH_APQ8064)
-	ice_gpiox_set(GPIO_PINID_NFC_HSEL , hsel_val );
-#endif
 
 	FELICA_LOG_DEBUG("[MFDD] %s END", __func__);
 	return 1;
@@ -3670,11 +3642,7 @@ static ssize_t cxd2235power_write(struct file *file, const char __user *data,
 		return -EFAULT;
 	}
 
-#if defined(CONFIG_ARCH_EXYNOS)
 	gpio_set_value(GPIO_PINID_NFC_PON , on );
-#elif defined(CONFIG_ARCH_APQ8064)
-	ice_gpiox_set(GPIO_PINID_NFC_PON, on);
-#endif
 
 	FELICA_LOG_DEBUG("[MFDD] %s END on = %d", __func__, on);
 	
