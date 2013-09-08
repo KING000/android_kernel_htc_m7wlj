@@ -145,28 +145,28 @@
 
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 #define HOLE_SIZE		0x20000
-#define MSM_CONTIG_MEM_SIZE	0x65000
+#define MSM_CONTIG_MEM_SIZE  0x65000
 #ifdef CONFIG_MSM_IOMMU
-#define MSM_ION_MM_SIZE		0x3800000
-#define MSM_ION_SF_SIZE		0
-#define MSM_ION_QSECOM_SIZE	0x780000 /* (7.5MB) */
-#define MSM_ION_HEAP_NUM	7
+#define MSM_ION_MM_SIZE    0x3800000
+#define MSM_ION_SF_SIZE    0
+#define MSM_ION_QSECOM_SIZE  0x780000 /* (7.5MB) */
+#define MSM_ION_HEAP_NUM  7
 #else
 #define MSM_ION_MM_SIZE		MSM_PMEM_ADSP_SIZE
-#define MSM_ION_SF_SIZE		MSM_PMEM_SIZE + 0x6400000
-#define MSM_ION_QSECOM_SIZE	0x600000 /* (6MB) */
-#define MSM_ION_HEAP_NUM	8
+#define MSM_ION_SF_SIZE    MSM_PMEM_SIZE + 0x6400000
+#define MSM_ION_QSECOM_SIZE	0x600000 
+#define MSM_ION_HEAP_NUM  8
 #endif
-#define MSM_ION_MM_FW_SIZE	(0x200000 - HOLE_SIZE) /* (2MB - 128KB) */
+#define MSM_ION_MM_FW_SIZE  (0x200000 - HOLE_SIZE) /* (2MB - 128KB) */
 #define MSM_ION_MFC_SIZE	SZ_8K
 #define MSM_ION_AUDIO_SIZE	MSM_PMEM_AUDIO_SIZE
 #else
-#define MSM_CONTIG_MEM_SIZE	0x110C000
+#define MSM_CONTIG_MEM_SIZE  0x110C000
 #define MSM_ION_HEAP_NUM	1
 #endif
 
 #define APQ8064_FIXED_AREA_START (0xa0000000 - (MSM_ION_MM_FW_SIZE + \
-							HOLE_SIZE))
+              HOLE_SIZE))
 #define MAX_FIXED_AREA_SIZE	0x10000000
 #define MSM_MM_FW_SIZE		(0x200000 - HOLE_SIZE)
 #define APQ8064_FW_START	APQ8064_FIXED_AREA_START
@@ -447,9 +447,9 @@ static void __init reserve_pmem_memory(void)
 	reserve_memory_for(&android_pmem_adsp_pdata);
 	reserve_memory_for(&android_pmem_pdata);
 	reserve_memory_for(&android_pmem_audio_pdata);
-#endif /*CONFIG_MSM_MULTIMEDIA_USE_ION*/
+#endif 
 	apq8064_reserve_table[MEMTYPE_EBI1].size += msm_contig_mem_size;
-#endif /*CONFIG_ANDROID_PMEM*/
+#endif 
 }
 
 static int deluxe_j_paddr_to_memtype(unsigned int paddr)
@@ -516,18 +516,6 @@ static struct platform_device ion_adsp_heap_device = {
 };
 #endif
 
-/**
- * These heaps are listed in the order they will be allocated. Due to
- * video hardware restrictions and content protection the FW heap has to
- * be allocated adjacent (below) the MM heap and the MFC heap has to be
- * allocated after the MM heap to ensure MFC heap is not more than 256MB
- * away from the base address of the FW heap.
- * However, the order of FW heap and MM heap doesn't matter since these
- * two heaps are taken care of by separate code to ensure they are adjacent
- * to each other.
- * Don't swap the order unless you know what you are doing!
- */
-
 struct ion_platform_heap apq8064_heaps[] = {
 		{
 			.id	= ION_SYSTEM_HEAP_ID,
@@ -542,7 +530,7 @@ struct ion_platform_heap apq8064_heaps[] = {
 			.size	= MSM_ION_MM_SIZE,
 			.memory_type = ION_EBI_TYPE,
 			.extra_data = (void *) &cp_mm_deluxe_j_ion_pdata,
-			.priv 	= &ion_mm_heap_device.dev
+			.priv   = &ion_mm_heap_device.dev
 		},
 		{
 			.id	= ION_MM_FIRMWARE_HEAP_ID,
@@ -760,13 +748,10 @@ static void __init reserve_ion_memory(void)
 
 	cma_alignment = PAGE_SIZE << max(MAX_ORDER, pageblock_order);
 
-	/* We only support 1 reusable heap. Check if more than one heap
-	 * is specified as reusable and set as non-reusable if found.
-	 */
 	for (i = 0; i < apq8064_ion_pdata.nr; ++i) {
 		struct ion_platform_heap *heap =
-			&(apq8064_ion_pdata.heaps[i]);
-		int use_cma = 0;
+		  &(apq8064_ion_pdata.heaps[i]);
+		  int use_cma = 0;
 
 		if (heap->extra_data) {
 			int fixed_position = NOT_FIXED;
@@ -774,15 +759,14 @@ static void __init reserve_ion_memory(void)
 			switch ((int)heap->type) {
 			case ION_HEAP_TYPE_CP:
 				if (((struct ion_cp_heap_pdata *)
-				    heap->extra_data)->is_cma) {
-					heap->size = ALIGN(heap->size,
-					   cma_alignment);
-					use_cma = 1;
+				  heap->extra_data)->is_cma) {
+				  	heap->size = ALIGN(heap->size,
+				  		cma_alignment);
+				  		use_cma = 1;
 				}
 				fixed_position = ((struct ion_cp_heap_pdata *)
 					heap->extra_data)->fixed_position;
 				break;
-
 			case ION_HEAP_TYPE_DMA:
 				use_cma = 1;
 				/* Purposely fall through here */
@@ -805,31 +789,26 @@ static void __init reserve_ion_memory(void)
 			} else if (fixed_position == FIXED_MIDDLE) {
 				fixed_middle_size += heap->size;
 				middle_use_cma = use_cma;
-			} else if (fixed_position == FIXED_HIGH) {
+	        } else if (fixed_position == FIXED_HIGH) {
 				fixed_high_size += heap->size;
-				high_use_cma = use_cma;
-			} else if (use_cma) {
-				/*
-				 * Heaps that use CMA but are not part of the
-				 * fixed set. Create wherever.
-				 */
-				dma_declare_contiguous(
-					heap->priv,
-					heap->size,
-					0,
-					0xb0000000);
-			}
+
+        high_use_cma = use_cma;
+     } else if (use_cma) {
+	 	/*
+         * Heaps that use CMA but are not part of the
+         * fixed set. Create wherever.
+         */
+        dma_declare_contiguous(
+          heap->priv,
+          heap->size,
+          0,
+          0xb0000000);
+		  }
 		}
 	}
 
 	if (!fixed_size)
 		return;
-
-	/*
-	 * Given the setup for the fixed area, we can't round up all sizes.
-	 * Some sizes must be set up exactly and aligned correctly. Incorrect
-	 * alignments are considered a configuration issue
-	 */
 
 	fixed_low_start = APQ8064_FIXED_AREA_START;
 	if (low_use_cma) {
@@ -844,7 +823,6 @@ static void __init reserve_ion_memory(void)
 				fixed_low_size + HOLE_SIZE);
 		BUG_ON(ret);
 	}
-
 	fixed_middle_start = fixed_low_start + fixed_low_size + HOLE_SIZE;
 	if (middle_use_cma) {
                 BUG_ON(!IS_ALIGNED(fixed_middle_start, cma_alignment));
@@ -857,7 +835,6 @@ static void __init reserve_ion_memory(void)
 				fixed_middle_size);
 		BUG_ON(ret);
 	}
-
 	fixed_high_start = fixed_middle_start + fixed_middle_size;
 	if (high_use_cma) {
 		fixed_high_size = ALIGN(fixed_high_size, cma_alignment);
@@ -900,14 +877,14 @@ static void __init reserve_ion_memory(void)
 				break;
 			case FIXED_MIDDLE:
 				heap->base = fixed_middle_start;
-				if (middle_use_cma) {
-					ret = dma_declare_contiguous(
-						heap->priv,
-						heap->size,
-						fixed_middle_start,
-						0xa0000000);
-					WARN_ON(ret);
-				}
+		        if (middle_use_cma) {
+		          ret = dma_declare_contiguous(
+		            heap->priv,
+		            heap->size,
+		            fixed_middle_start,
+		            0xa0000000);
+		          WARN_ON(ret);
+		        }
 				pdata->secure_base = fixed_middle_start
 								- HOLE_SIZE;
 				pdata->secure_size = HOLE_SIZE + heap->size;
@@ -955,16 +932,16 @@ static struct resource mdm_resources[] = {
 		.flags	= IORESOURCE_IO,
 	},
 	{
-		.start	= MDM2AP_HSIC_READY_XC,
-		.end	= MDM2AP_HSIC_READY_XC,
+		.start	= MDM2AP_HSIC_READY,
+		.end		= MDM2AP_HSIC_READY,
 		.name	= "MDM2AP_HSIC_READY",
 		.flags	= IORESOURCE_IO,
 	},
 	{
-		.start  = AP2MDM_WAKEUP_XC,
-		.end    = AP2MDM_WAKEUP_XC,
-		.name   = "AP2MDM_WAKEUP",
-		.flags  = IORESOURCE_IO,
+		.start	= AP2MDM_WAKEUP_XA_XB,
+		.end		= AP2MDM_WAKEUP_XA_XB,
+		.name	= "AP2MDM_WAKEUP",
+		.flags	= IORESOURCE_IO,
 	},
 	{
 		.start  = APQ2MDM_IPC1,
@@ -1023,7 +1000,6 @@ static void __init deluxe_j_reserve(void)
 {
 	if (mem_size_mb == 64)
 		return;
-
 	msm_reserve();
 }
 
@@ -1034,19 +1010,6 @@ static void __init deluxe_j_early_reserve(void)
 
 #ifdef CONFIG_HTC_BATT_8960
 static int critical_alarm_voltage_mv[] = {3000, 3100, 3200, 3400};
-
-static int pm8921_is_wireless_charger(void)
-{
-	int usb_in, dc_in;
-
-	usb_in = pm8921_is_usb_chg_plugged_in();
-	dc_in = pm8921_is_dc_chg_plugged_in();
-	pr_info("%s: usb_in=%d, dc_in=%d\n", __func__, usb_in, dc_in);
-	if (!usb_in && dc_in)
-		return 1;
-	else
-		return 0;
-}
 
 static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.guage_driver = 0,
@@ -1406,9 +1369,10 @@ static struct pm8xxx_gpio_init switch_to_mhl_pmic_gpio_table_xa[] = {
                          PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
                          PM_GPIO_FUNC_NORMAL, 0, 0),
 };
-#if 0
-static struct pm8xxx_gpio_init switch_to_usb_headset_pmic_gpio_table[] = {
-        PM8XXX_GPIO_INIT(AUDIOz_MHL_SW, PM_GPIO_DIR_OUT,
+
+
+static struct pm8xxx_gpio_init switch_to_usb_pmic_gpio_table_xb[] = {
+        PM8XXX_GPIO_INIT(USBz_AUDIO_SW, PM_GPIO_DIR_OUT,
                          PM_GPIO_OUT_BUF_CMOS, 0, PM_GPIO_PULL_NO,
                          PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
                          PM_GPIO_FUNC_NORMAL, 0, 0),
@@ -1420,7 +1384,7 @@ static struct pm8xxx_gpio_init switch_to_mhl_pmic_gpio_table_xb[] = {
                          PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
                          PM_GPIO_FUNC_NORMAL, 0, 0),
 };
-#endif
+
 static void config_gpio_table(uint32_t *table, int len)
 {
 	int n, rc;
@@ -1438,10 +1402,18 @@ static void deluxe_j_usb_dpdn_switch(int path)
 {
 	switch (path) {
 	case PATH_USB:
-		pm8xxx_gpio_config(switch_to_usb_pmic_gpio_table[0].gpio, &switch_to_usb_pmic_gpio_table[0].config);
+		if (system_rev == XA) {
+			pm8xxx_gpio_config(switch_to_usb_pmic_gpio_table_xa[0].gpio, &switch_to_usb_pmic_gpio_table_xa[0].config);
+		} else {
+			pm8xxx_gpio_config(switch_to_usb_pmic_gpio_table_xb[0].gpio, &switch_to_usb_pmic_gpio_table_xb[0].config);
+		}
 		break;
 	case PATH_MHL:
-		pm8xxx_gpio_config(switch_to_mhl_pmic_gpio_table[0].gpio, &switch_to_mhl_pmic_gpio_table[0].config);
+		if (system_rev == XA) {
+			pm8xxx_gpio_config(switch_to_mhl_pmic_gpio_table_xa[0].gpio, &switch_to_mhl_pmic_gpio_table_xa[0].config);
+		} else {
+			pm8xxx_gpio_config(switch_to_mhl_pmic_gpio_table_xb[0].gpio, &switch_to_mhl_pmic_gpio_table_xb[0].config);
+		}
 		break;
 	}
 	sii9234_change_usb_owner((path == PATH_MHL) ? 1 : 0);
@@ -1558,7 +1530,7 @@ static int mhl_sii9234_all_power(bool enable)
 }
 
 #ifdef CONFIG_FB_MSM_HDMI_MHL_SII9234
-static uint32_t mhl_gpio_table_xc[] = {
+static uint32_t mhl_gpio_table[] = {
         GPIO_CFG(MHL_INT, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA),
 };
 
@@ -1579,9 +1551,9 @@ static int mhl_sii9234_power(int on)
 		break;
 	case 1:
 		mhl_sii9234_all_power(true);
-		config_gpio_table(mhl_gpio_table_xc, ARRAY_SIZE(mhl_gpio_table_xc));
-		pm8xxx_gpio_config(mhl_pmic_gpio_xc[0].gpio,
-				&mhl_pmic_gpio_xc[0].config);
+		config_gpio_table(mhl_gpio_table, ARRAY_SIZE(mhl_gpio_table));
+		pm8xxx_gpio_config(mhl_pmic_gpio[0].gpio,
+				&mhl_pmic_gpio[0].config);
 		break;
 	default:
 		pr_warning("%s(%d) got unsupport parameter!!!\n", __func__, on);
@@ -1722,73 +1694,6 @@ out:
 	return 0;
 }
 
-#if 0
-static int monarudo_usb_product_id_match_array[] = {
-        0x0ff8, 0x0e44, /* CDC-ECM */
-        0x0fa4, 0x0e9f, /* mtp+adb+ums+rmnet */
-        0x0fa5, 0x0ea0, /* mtp+ums+rmnet */
-        0x0f91, 0x0ebd, /* mtp+ums */
-        -1,
-};
-
-static int monarudo_usb_product_id_rndis[] = {
-	0x073c, /* Internet Sharing: rndis+mtp+adb+ums */
-	0x0742, /* IPT: rndis+mtp+adb+ums */
-	0x073d, /* Internet Sharing: rndis+mtp+ums */
-	0x0743, /* IPT: rndis+mtp+ums */
-	0x0740, /* Internet Sharing: rndis+mtp+adb+ums+diag+diag_mdm */
-	0x0746, /* IPT: rndis+mtp+adb+ums+diag+diag_mdm */
-	0x0741, /* Internet Sharing: rndis+mtp+ums+diag+diag_mdm */
-	0x0747, /* IPT: rndis+mtp+ums+diag+diag_mdm */
-};
-
-static int monarudo_usb_product_id_match(int product_id, int intrsharing)
-{
-        int *pid_array = monarudo_usb_product_id_match_array;
-        int *rndis_array = monarudo_usb_product_id_rndis;
-	int category = 0;
-
-        if (!pid_array)
-                return product_id;
-
-        /* VZW pid re-match will not apply on MFG mode */
-        if (board_mfg_mode())
-                return product_id;
-
-        while (pid_array[0] >= 0) {
-                if (product_id == pid_array[0])
-                        return pid_array[1];
-                pid_array += 2;
-        }
-
-	switch (product_id) {
-	case 0x0fb4: /* rndis+mtp+adb+ums */
-		category = 0;
-		break;
-	case 0x0fb5: /* rndis+mtp+ums*/
-		category = 1;
-		break;
-	case 0x0f8e: /* rndis+mtp+adb+ums+diag+diag_mdm */
-		category = 2;
-		break;
-	case 0x0f8f: /* rndis+mtp+ums+diag+diag_mdm */
-		category = 3;
-		break;
-	default:
-		category = -1;
-		break;
-	}
-
-	if (category != -1) {
-		if (intrsharing)
-			return rndis_array[category * 2 + 1];
-		else
-			return rndis_array[category * 2];
-	}
-        return product_id;
-}
-#endif
-
 static struct android_usb_platform_data android_usb_pdata = {
 #if 0
 	.vendor_id	= 0x0BB4,
@@ -1803,7 +1708,7 @@ static struct android_usb_platform_data android_usb_pdata = {
 #endif
 	.update_pid_and_serial_num = usb_diag_update_pid_and_serial_num,
 #if 0
-	.usb_id_pin_gpio = USB1_HS_ID_GPIO_XA_XB,
+	.usb_id_pin_gpio = USB1_HS_ID_GPIO,
 	.usb_rmnet_interface = "HSIC,HSIC",
 	.usb_diag_interface = "diag,diag_mdm",
 	.fserial_init_string = "HSIC:modem,tty,tty:autobot,tty:serial,tty:autobot",
@@ -1947,16 +1852,8 @@ static int64_t deluxe_j_get_usbid_adc(void)
        return adc;
 }
 
-static uint32_t usb_ID_PIN_input_table_xa_xb[] = {
-	GPIO_CFG(USB1_HS_ID_GPIO_XA_XB, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
-};
-
-static uint32_t usb_ID_PIN_ouput_table_xa_xb[] = {
-	GPIO_CFG(USB1_HS_ID_GPIO_XA_XB, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
-};
-
-struct pm8xxx_gpio_init usb_id_pmic_gpio_xc[] = {
-	PM8XXX_GPIO_INIT(USB1_HS_ID_GPIO_XC, PM_GPIO_DIR_IN,
+static struct pm8xxx_gpio_init usb_id_pmic_gpio[] = {
+	PM8XXX_GPIO_INIT(USB1_HS_ID_GPIO, PM_GPIO_DIR_IN,
 			 PM_GPIO_OUT_BUF_CMOS, 0, PM_GPIO_PULL_NO,
 			 PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_HIGH,
 			 PM_GPIO_FUNC_NORMAL, 0, 0),
@@ -2075,19 +1972,13 @@ void deluxe_j_add_usb_devices(void)
 #endif
 }
 
-struct pm8xxx_gpio_init headset_pmic_gpio_xa[] = {
-	PM8XXX_GPIO_INIT(V_AUD_HSMIC_2V85_EN, PM_GPIO_DIR_OUT,
-			PM_GPIO_OUT_BUF_CMOS, 0, PM_GPIO_PULL_NO,
-			PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
-			PM_GPIO_FUNC_NORMAL, 0, 0),
-};
 
-struct pm8xxx_gpio_init headset_pmic_gpio_xc[] = {
+struct pm8xxx_gpio_init headset_pmic_gpio_xa[] = {
 	PM8XXX_GPIO_INIT(V_AUD_HSMIC_2V85_EN, PM_GPIO_DIR_OUT,
 			 PM_GPIO_OUT_BUF_CMOS, 0, PM_GPIO_PULL_NO,
 			 PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
 			 PM_GPIO_FUNC_NORMAL, 0, 0),
-	PM8XXX_GPIO_INIT(AUD_UART_OEz_XC, PM_GPIO_DIR_OUT,
+	PM8XXX_GPIO_INIT(AUD_UART_OEz, PM_GPIO_DIR_OUT,
 			 PM_GPIO_OUT_BUF_CMOS, 1, PM_GPIO_PULL_NO,
 			 PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
 			 PM_GPIO_FUNC_NORMAL, 0, 0),
@@ -2116,27 +2007,19 @@ static void headset_init(void)
 
 	pr_info("[HS_BOARD] (%s) Headset initiation (system_rev=%d)\n",
 		__func__, system_rev);
-	if (system_rev < 2) {
-		for( i = 0; i < ARRAY_SIZE(headset_pmic_gpio_xa); i++) {
+	gpio_tlmm_config(headset_cpu_gpio_xa[0], GPIO_CFG_ENABLE);
+	gpio_tlmm_config(headset_cpu_gpio_xa[1], GPIO_CFG_ENABLE);
+	for( i = 0; i < ARRAY_SIZE(headset_pmic_gpio_xa); i++) {
 
-			rc = pm8xxx_gpio_config(headset_pmic_gpio_xa[0].gpio,
-					&headset_pmic_gpio_xa[0].config);
-			if (rc)
-				pr_info("[HS_BOARD] %s: Config ERROR: GPIO=%u, rc=%d\n",
-					__func__, headset_pmic_gpio_xa[0].gpio, rc);
-		}
-	} else { /* XC and after */
-		gpio_tlmm_config(headset_cpu_gpio_xc[2], GPIO_CFG_ENABLE);
-		for( i = 0; i < ARRAY_SIZE(headset_pmic_gpio_xc); i++) {
-
-			rc = pm8xxx_gpio_config(headset_pmic_gpio_xc[i].gpio,
-						&headset_pmic_gpio_xc[i].config);
-			if (rc)
-				pr_info("[HS_BOARD] %s: Config ERROR: GPIO=%u, rc=%d\n",
-					__func__, headset_pmic_gpio_xc[i].gpio, rc);
-		}
+		rc = pm8xxx_gpio_config(headset_pmic_gpio_xa[i].gpio,
+					&headset_pmic_gpio_xa[i].config);
+		if (rc)
+			pr_info("[HS_BOARD] %s: Config ERROR: GPIO=%u, rc=%d\n",
+				__func__, headset_pmic_gpio_xa[i].gpio, rc);
 	}
 }
+
+
 
 static void headset_power(int enable)
 {
@@ -3875,11 +3758,12 @@ pr_info("%s, linear led, mode=%d", __func__, mode);
 #endif
 static void config_flashlight_gpios(void)
 {
+	return;
 }
 
 static struct TPS61310_flashlight_platform_data flashlight_data = {
 	.gpio_init = config_flashlight_gpios,
-	.tps61310_strb0 = DRIVER_EN_XC,
+	.tps61310_strb0 = PM8921_GPIO_PM_TO_SYS(DRIVER_EN),
 	.tps61310_strb1 = PM8921_GPIO_PM_TO_SYS(TORCH_FLASHz),
 	.flash_duration_ms = 600,
 	.led_count = 1,
@@ -3968,54 +3852,6 @@ static struct platform_device ram_console_device = {
 	.num_resources  = ARRAY_SIZE(ram_console_resources),
 	.resource       = ram_console_resources,
 };
-static struct pm8xxx_vibrator_pwm_platform_data pm8xxx_vib_pwm_pdata = {
-	.initial_vibrate_ms = 0,
-	.max_timeout_ms = 15000,
-	.duty_us = 37,
-	.PERIOD_US = 38,
-        .bank = PM8XXX_ID_GPIO26,
-	.ena_gpio = PM8921_GPIO_PM_TO_SYS(HAPTIC_EN),
-	.vdd_gpio = PM8921_GPIO_PM_TO_SYS(HAPTIC_3V3_EN_XC_XD),
-};
-static struct pm8xxx_vibrator_pwm_platform_data pm8xxx_vib_pwm_pdata_XC = {
-	.initial_vibrate_ms = 0,
-	.max_timeout_ms = 15000,
-	.duty_us = 37,
-	.PERIOD_US = 38,
-        .bank = PM8XXX_ID_GPIO26,
-	.ena_gpio = PM8921_GPIO_PM_TO_SYS(HAPTIC_EN),
-	.vdd_gpio = HAPTIC_3V3_EN_XC_XD,
-};
-static struct pm8xxx_vibrator_pwm_platform_data pm8xxx_vib_pwm_pdata_XD = {
-        .initial_vibrate_ms = 0,
-        .max_timeout_ms = 15000,
-        .duty_us = 35,
-        .PERIOD_US = 38,
-        .bank = PM8XXX_ID_GPIO26,
-        .ena_gpio = PM8921_GPIO_PM_TO_SYS(HAPTIC_EN),
-        .vdd_gpio = HAPTIC_3V3_EN_XC_XD,
-};
-
-static struct platform_device vibrator_pwm_device = {
-	.name = PM8XXX_VIBRATOR_PWM_DEV_NAME,
-	.dev = {
-		.platform_data	= &pm8xxx_vib_pwm_pdata,
-	},
-};
-
-static struct platform_device vibrator_pwm_device_XC = {
-	.name = PM8XXX_VIBRATOR_PWM_DEV_NAME,
-	.dev = {
-		.platform_data	= &pm8xxx_vib_pwm_pdata_XC,
-	},
-};
-static struct platform_device vibrator_pwm_device_XD = {
-        .name = PM8XXX_VIBRATOR_PWM_DEV_NAME,
-        .dev = {
-                .platform_data  = &pm8xxx_vib_pwm_pdata_XD,
-        },
-};
-
 
 #ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
 static struct resource hdmi_msm_resources[] = {
@@ -4744,17 +4580,17 @@ static struct i2c_registry deluxe_j_i2c_devices[] __initdata = {
 };
 
 #ifdef CONFIG_RESET_BY_CABLE_IN
-static uint32_t ac_reset_xc_gpio_table[] = {
-	GPIO_CFG(AC_WDT_RST_XC, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+static uint32_t ac_reset_gpio_table[] = {
+	GPIO_CFG(AC_WDT_RST, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
 };
 
 void reset_dflipflop(void)
 {
 	gpio_tlmm_config(ac_reset_xc_gpio_table[0], GPIO_CFG_ENABLE);
-	gpio_set_value(AC_WDT_RST_XC, 0);
+	gpio_set_value(AC_WDT_RST, 0);
 	pr_info("[CABLE] Clear D Flip-Flop\n");
 	udelay(100);
-	gpio_set_value(AC_WDT_RST_XC, 1);
+	gpio_set_value(AC_WDT_RST, 1);
 	pr_info("[CABLE] Restore D Flip-Flop\n");
 }
 #endif
@@ -4785,8 +4621,8 @@ static void __init register_i2c_devices(void)
 
 #ifdef CONFIG_FB_MSM_HDMI_MHL
 #ifdef CONFIG_FB_MSM_HDMI_MHL_SII9234
-	/* must be before i2c device registration */
-	mhl_sii9234_device_data.gpio_reset = PM8921_GPIO_PM_TO_SYS(MHL_RSTz_XC_XD);
+	
+	mhl_sii9234_device_data.gpio_reset = PM8921_GPIO_PM_TO_SYS(MHL_RSTz);
 #endif
 #endif
 	
@@ -5128,28 +4964,15 @@ static void __init deluxe_j_common_init(void)
 	deluxe_j_init_gpiomux();
 #ifdef CONFIG_RESET_BY_CABLE_IN
 	pr_info("[CABLE] Enable Ac Reset Function.(%d) \n", system_rev);
-
-	gpio_tlmm_config(ac_reset_xc_gpio_table[0], GPIO_CFG_ENABLE);
-	gpio_set_value(AC_WDT_RST_XC, 1);
-	}
+	gpio_tlmm_config(ac_reset_gpio_table[0], GPIO_CFG_ENABLE);
+	gpio_set_value(AC_WDT_RST, 1);
 #endif
 
-	monarudo_i2c_init();
+	deluxe_j_i2c_init();
 
-	if (system_rev < XB) {
-		for (rc = 0; rc < ARRAY_SIZE(msm_i2c_gsbi3_info); rc++) {
-			if (!strcmp(msm_i2c_gsbi3_info[rc].type, SYNAPTICS_3200_NAME))
-				msm_i2c_gsbi3_info[rc].platform_data = &syn_ts_3k_2p5D_3030_evita_data;
-		}
-		if (board_build_flag() == 1) {
-			for (rc = 0; rc < ARRAY_SIZE(syn_ts_3k_2p5D_3030_evita_data);  rc++)
-				syn_ts_3k_2p5D_3030_evita_data[rc].mfg_flag = 1;
-		}
-	} else {
-		if (board_build_flag() == 1) {
-			for (rc = 0; rc < ARRAY_SIZE(syn_ts_3k_data);  rc++)
-				syn_ts_3k_data[rc].mfg_flag = 1;
-		}
+	if (board_build_flag() == 1) {
+		for (rc = 0; rc < ARRAY_SIZE(syn_ts_3k_data);  rc++)
+			syn_ts_3k_data[rc].mfg_flag = 1;
 	}
 
 #ifdef CONFIG_SERIAL_IRDA
