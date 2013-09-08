@@ -93,13 +93,13 @@ static struct msm_bus_vectors grp3d_low_vectors[] = {
 		.src = MSM_BUS_MASTER_GRAPHICS_3D,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
 		.ab = 0,
-		.ib = KGSL_CONVERT_TO_MBPS(1500),
+		.ib = KGSL_CONVERT_TO_MBPS(1000),
 	},
 	{
 		.src = MSM_BUS_MASTER_GRAPHICS_3D_PORT1,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
 		.ab = 0,
-		.ib = KGSL_CONVERT_TO_MBPS(1500),
+		.ib = KGSL_CONVERT_TO_MBPS(1000),
 	},
 };
 
@@ -262,7 +262,7 @@ static struct kgsl_device_platform_data kgsl_3d0_pdata = {
 #endif
 };
 
-static struct platform_device device_kgsl_3d0 = {
+struct platform_device device_kgsl_3d0 = {
 	.name = "kgsl-3d0",
 	.id = 0,
 	.num_resources = ARRAY_SIZE(kgsl_3d0_resources),
