@@ -724,6 +724,19 @@ config RESET_BY_CABLE_IN
         boolean "DEVICE RESET BY CABLE IN"
         default n
 
+config SONY_FELICA_SUPPORT
+	bool "Enable FeliCa support"
+	default n
+	help
+	  This option enables support for FeliCa.
+
+config SONY_FELICA_NFC_SUPPORT
+	bool "Enable FeliCa/NFC combination device support"
+	default n
+	depends on SONY_FELICA_SUPPORT
+	help
+	  This option enables support for FeliCa/NFC combination device.
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"
